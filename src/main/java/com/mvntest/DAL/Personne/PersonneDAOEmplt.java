@@ -6,9 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import com.mvntest.DAL.Status.Status;
-import com.mvntest.DAL.Status.StatusDAO;
-import com.mvntest.DAL.Status.StatusDAOEmplt;
 import com.mvntest.DBConfig.Database;
 
 public class PersonneDAOEmplt implements PersonneDAO {
@@ -26,8 +23,8 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 "FOREIGN KEY (id_status) REFERENCES Status(id)" +
                 ")";
 
-                try (Connection conn = Database.getConnection();
-            PreparedStatement st = conn.prepareStatement(sqlQuery)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement st = conn.prepareStatement(sqlQuery)) {
             st.execute();
             System.out.println("Table created successfully.");
         } catch (SQLException e) {
@@ -35,6 +32,15 @@ public class PersonneDAOEmplt implements PersonneDAO {
         }
     }
 
+    /**
+     * Récupère une personne de la base de données en utilisant son ID.
+     * 
+     * @param id L'ID de la personne à récupérer.
+     * @return La personne récupérée, ou null si aucune personne n'existe avec cet
+     *         ID.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public Personne get(int id) throws SQLException {
         String sqlQuery = "SELECT id, id_status, nom, prenom FROM Personne WHERE id = ?";
@@ -47,19 +53,30 @@ public class PersonneDAOEmplt implements PersonneDAO {
             getPs.setInt(1, id);
             // Essayer d'exécuter la requête SQL et obtenir le résultat
             try (ResultSet rs = getPs.executeQuery()) {
-                // Si le résultat contient une ligne, créer un nouvel objet Cours avec les
+                // Si le résultat contient une ligne, créer un nouvel objet Personne avec les
                 // données de cette ligne
-                // Sinon, retourner null
                 return rs.next() ? new Personne(rs.getInt("id"),
                         rs.getInt("id_status"),
                         rs.getString("nom"),
                         rs.getString("prenom")) : null;
+            } catch (SQLException e) {
+                System.out.println("Error trying to get connection the DB : " + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println("Error trying to get connection the DB : " + e.getMessage());
         }
+        return null;
     }
 
+    /**
+     * Récupère toutes les personnes de la base de données.
+     * 
+     * @return Une liste de toutes les personnes de la base de données.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
-    public ArrayList<Personne> getAll() {
+    public ArrayList<Personne> getAll() throws SQLException {
         String sqlQury = "SELECT id, id_status, nom, prenom FROM Personne";
         ArrayList<Personne> listOfPersons = new ArrayList<Personne>();
         try (Connection conn = Database.getConnection();
@@ -82,8 +99,17 @@ public class PersonneDAOEmplt implements PersonneDAO {
         return listOfPersons;
     }
 
+    /**
+     * Enregistre une personne dans la base de données. Si la personne existe déjà,
+     * met à jour ses données.
+     * 
+     * @param p La personne à enregistrer ou mettre à jour.
+     * @return Le nombre de lignes modifiées dans la base de données.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
-    public int save(Personne p) {
+    public int save(Personne p) throws SQLException {
         int result = 0;
         try (Connection conn = Database.getConnection()) {
             result = !isExists(p, conn) ? insert(p) : update(p);
@@ -94,17 +120,25 @@ public class PersonneDAOEmplt implements PersonneDAO {
         return result;
     }
 
+    /**
+     * Insère une nouvelle personne dans la base de données.
+     * 
+     * @param p La personne à insérer.
+     * @return Le nombre de lignes modifiées dans la base de données.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
-    public int insert(Personne p) {
+    public int insert(Personne p) throws SQLException {
 
-       String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
-                  "VALUES (?, ?, ?)";
+        String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
+                "VALUES (?, ?, ?)";
         int result = 0;
         try (Connection conn = Database.getConnection();
                 PreparedStatement insertSp = conn.prepareStatement(sqlQuery)) {
             if (isExists(p, conn)) {
                 return result;
-            } else {               
+            } else {
                 insertSp.setInt(1, p.getId_status());
                 insertSp.setString(2, p.getNom());
                 insertSp.setString(3, p.getPrenom());
@@ -117,6 +151,14 @@ public class PersonneDAOEmplt implements PersonneDAO {
         return result;
     }
 
+    /**
+     * Met à jour une personne dans la base de données.
+     * 
+     * @param p La personne à mettre à jour.
+     * @return Le nombre de lignes mises à jour.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public int update(Personne p) {
         String sqlQuery = "UPDATE Personne SET " +
@@ -135,54 +177,81 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 updatePs.setString(2, p.getNom());
                 updatePs.setString(3, p.getPrenom());
                 updatePs.setInt(4, p.getId());
+                updatePs.executeUpdate();
                 System.out.println("Updated.");
             }
         } catch (SQLException e) {
             System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
         }
 
         return result;
     }
 
+    /**
+     * Supprime une personne de la base de données en utilisant son ID.
+     * 
+     * @param p La personne à supprimer.
+     * @return Le nombre de lignes supprimées.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public int delete(Personne p) {
-        
+
         int result = 0;
         String sqlQuery = "DELETE FROM Personne WHERE id = ?";
         try (Connection conn = Database.getConnection();
-        PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
+                PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
 
-            if(!isExists(p, conn)){
+            if (!isExists(p, conn)) {
                 return result;
             } else {
                 deletePs.setInt(1, p.getId());
                 result = deletePs.executeUpdate();
-            }            
+            }
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
         }
         return result;
     }
+
+    /**
+     * Supprime une personne de la base de données en utilisant son ID.
+     * 
+     * @param id L'ID de la personne à supprimer.
+     * @return Le nombre de lignes supprimées.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
-    public int delete(int id) {
-        
+    public int delete(int id) throws SQLException {
         int result = 0;
         String sqlQuery = "DELETE FROM Personne WHERE id = ?";
         try (Connection conn = Database.getConnection();
-        PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
-
-            if(!isExists(id, conn)){
+                PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
+            if (!isExists(id, conn)) {
                 return result;
             } else {
                 deletePs.setInt(1, id);
                 result = deletePs.executeUpdate();
-            }            
+            }
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
         }
         return result;
     }
 
+    /**
+     * Vérifie si une personne est inscrite à un cours en utilisant son ID.
+     * 
+     * @param id   L'ID de la personne à vérifier.
+     * @param conn La connexion à la base de données.
+     * @return true si la personne est inscrite, false sinon.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public boolean isExists(int id, Connection conn) throws SQLException {
         String sqlQuery = "SELECT COUNT(*) FROM Personne_Cours WHERE id = ? ";
@@ -192,11 +261,24 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
+            } catch (SQLException e) {
+                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
         }
         return false;
     }
 
+    /**
+     * Vérifie si une personne existe dans la base de données en utilisant son ID.
+     * 
+     * @param p    La personne à vérifier.
+     * @param conn La connexion à la base de données.
+     * @return true si la personne existe, false sinon.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public boolean isExists(Personne p, Connection conn) throws SQLException {
         String sqlQuery = "SELECT COUNT(*) FROM Personne WHERE id = ? ";
@@ -206,11 +288,24 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
+            } catch (SQLException e) {
+                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
         }
         return false;
     }
 
+    /**
+     * Cette méthode vérifie si une personne existe dans la base de données en
+     * utilisant son ID.
+     * 
+     * @param id L'ID de la personne à vérifier.
+     * @return true si la personne existe, false sinon.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
     @Override
     public boolean isExists(int id) throws SQLException {
         String sqlQuery = "SELECT COUNT(*) FROM Personne WHERE id = ? ";
@@ -222,13 +317,25 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
                 }
+            } catch (SQLException e) {
+                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
             }
         }
-        System.out.println("No record found for this data!");
+        System.out.println("Aucun enregistrement trouvé pour ces données!");
         return false;
     }
 
-        @Override
+    /**
+     * Cette méthode est utilisée pour obtenir l'ID d'une personne en utilisant son
+     * nom.
+     * 
+     * @param nom Le nom de la personne dont l'ID est requis.
+     * @return L'ID de la personne. Si aucune personne avec ce nom n'est trouvée,
+     *         retourne 0.
+     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
+     *                      données.
+     */
+    @Override
     public int getID(String nom) throws SQLException {
 
         int id = 0;
@@ -242,6 +349,5 @@ public class PersonneDAOEmplt implements PersonneDAO {
         }
         return id;
     }
-
 
 }

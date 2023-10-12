@@ -130,15 +130,14 @@ public class Main {
         personneDAO.insert(p5);
         personneDAO.insert(p6); */
         
-ArrayList<Personne> personneList = personneDAO.getAll();
-for (Personne personne : personneList) {
-  System.out.println(personne.getNom() + " " + personne.getPrenom()+ "      :  " + statusDAO.get(personne.getId_status()).getStatus());
-}
+        ArrayList<Personne> personneList = personneDAO.getAll();
+        for (Personne personne : personneList) {
+          System.out.println(personne.getNom() + "        " + personne.getPrenom()+ "      :  " + statusDAO.get(personne.getId_status()).getStatus());
+        }
             
           /*   
             int coursId = coursDAO.getID("Droit civil");
             System.out.println(staustId); */
-     
         
     }
 }
