@@ -63,7 +63,7 @@ public class SectionDAOEmplt implements SectionDAO {
                             resultSet.getString("nom"));
                     sections.add(section);
                 }
-            } catch (SQLException e) {
+            } catch (SQLException e) { 
                 System.out.println(e.getMessage());
             }
         } catch (SQLException e) {
@@ -77,8 +77,8 @@ public class SectionDAOEmplt implements SectionDAO {
         int result = 0;
         try (Connection conn = Database.getConnection()) {
                 result = !isExists(t, conn) ? insert(t) : update(t);
-            return result;
-        }
+            }
+        return result;
     }
 
     @Override
@@ -94,8 +94,11 @@ public class SectionDAOEmplt implements SectionDAO {
                         result = insert.executeUpdate();
                         System.out.println(" row inserted.");
                     }
-            return result;
-        }
+                } catch (SQLException e){
+                    System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+                }
+        return result;
+    
     }
 
     @Override
@@ -111,7 +114,7 @@ public class SectionDAOEmplt implements SectionDAO {
                 updateStatement.setString(1, s.getNom());
                 updateStatement.setInt(2, s.getId());
                 result = updateStatement.executeUpdate();
-                System.out.println("Updated.");
+                System.out.println(result + " row Updated.");
             }
         }
         return result;
@@ -199,4 +202,19 @@ public class SectionDAOEmplt implements SectionDAO {
         return false;
     }
 
+            @Override
+    public int getID(String section) throws SQLException {
+
+        int id = 0;
+        String sqlQuery = "SELECT id FROM Status WHERE section = ? ";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
+                    idPs.setString(1, section);
+            ResultSet rs = idPs.executeQuery();
+            if (rs.next()) {
+                id = rs.getInt("id");
+            }
+        }
+        return id;
+    }
 }

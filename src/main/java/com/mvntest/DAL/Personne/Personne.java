@@ -4,17 +4,18 @@ public class Personne {
     
     private int id = 0;
     private int id_status;
-    private String nom, prenoms;
+    private String nom, prenom;
 
 
     public Personne() {
     }
 
 
-    public Personne(int id_status, String nom, String prenoms) {
+    public Personne(int id ,int id_status, String nom, String prenom) {
+        this.id = id;
         this.id_status = id_status;
         this.nom = nom;
-        this.prenoms = prenoms;
+        this.prenom = prenom;
     }
 
     
@@ -36,15 +37,15 @@ public class Personne {
     public void setNom(String nom) {
         this.nom = nom;
     }
-    public String getPrenoms() {
-        return prenoms;
+    public String getPrenom() {
+        return prenom;
     }
-    public void setPrenoms(String prenoms) {
-        this.prenoms = prenoms;
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
     }
     
     @Override
     public String toString() {
-        return "Personne [id=" + id + ", id_status=" + id_status + ", nom=" + nom + ", prenoms=" + prenoms + "]";
+        return "Personne [id=" + id + ", id_status=" + id_status + ", nom=" + nom + ", prenom=" + prenom + "]";
     }
 }
