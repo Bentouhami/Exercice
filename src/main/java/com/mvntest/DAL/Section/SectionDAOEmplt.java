@@ -10,31 +10,18 @@ import com.mvntest.DBConfig.Database;
 
 public class SectionDAOEmplt implements SectionDAO {
 
-    
-    public SectionDAOEmplt() {
-        String sqlQuery =   "CREATE TABLE IF NOT EXISTS Section ("+
-                                "id SERIAL PRIMARY KEY,"+ 
-                                "nom VARCHAR(30)"+
-                            ")";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.execute();
-        } catch (SQLException e){
-            System.out.println(e.getMessage());
-        }
+    public SectionDAOEmplt() throws SQLException {
+        createSectionTB();
     }
 
     @Override
     public Section get(int id) throws SQLException {
-        String sqlQuery = "SELECT id, nom from section where id = ?";
+        String sqlQuery = "SELECT id, nom FROM section WHERE id = ?";
 
         // using try-ressorces
         try (Connection conn = Database.getConnection();
                 PreparedStatement get = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                System.out.println("section not found");
-                return null;
-            } else {
+            
                 get.setInt(1, id);
                 try (ResultSet resultSet = get.executeQuery()) {
                     // i used 'if' in this place because i'm expecting only one result
@@ -45,7 +32,6 @@ public class SectionDAOEmplt implements SectionDAO {
                     }
                 }
             }
-        }
         return null;
     }
 
@@ -63,7 +49,7 @@ public class SectionDAOEmplt implements SectionDAO {
                             resultSet.getString("nom"));
                     sections.add(section);
                 }
-            } catch (SQLException e) { 
+            } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }
         } catch (SQLException e) {
@@ -76,8 +62,8 @@ public class SectionDAOEmplt implements SectionDAO {
     public int save(Section t) throws SQLException {
         int result = 0;
         try (Connection conn = Database.getConnection()) {
-                result = !isExists(t, conn) ? insert(t) : update(t);
-            }
+            //result = !isExists(t, conn) ? insert(t) : update(t);
+        }
         return result;
     }
 
@@ -87,18 +73,16 @@ public class SectionDAOEmplt implements SectionDAO {
         int result = 0;
         try (Connection conn = Database.getConnection();
                 PreparedStatement insert = conn.prepareStatement(sqlQuery)) {
-                    if(!isExists(t, conn)){
-                        return result;
-                    } else {
-                        insert.setString(1, t.getNom());
-                        result = insert.executeUpdate();
-                        System.out.println(" row inserted.");
-                    }
-                } catch (SQLException e){
-                    System.out.println("Error while trying to connect to the DB: " + e.getMessage());
-                }
+                    
+                    insert.setString(1, t.getNom());
+                    int affectedRows = insert.executeUpdate();
+
+                    
+        } catch (SQLException e) {
+            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+        }
         return result;
-    
+
     }
 
     @Override
@@ -107,114 +91,83 @@ public class SectionDAOEmplt implements SectionDAO {
         int result = 0;
         try (Connection conn = Database.getConnection();
                 PreparedStatement updateStatement = conn.prepareStatement(sqlQuery)) {
-
-            if (!isExists(result, conn)){
-                return result;
-            } else {
                 updateStatement.setString(1, s.getNom());
                 updateStatement.setInt(2, s.getId());
                 result = updateStatement.executeUpdate();
                 System.out.println(result + " row Updated.");
             }
-        }
         return result;
     }
-
     @Override
-    public int delete(Section s) throws SQLException {
-        String sqlQuery = "DELETE from section WHERE id = ? ";
-        int result = 0;
+    public int deleteSection(String nom) throws SQLException{
+        String sqlQuery = "DELETE from section WHERE nom = ? ";
         try (Connection conn = Database.getConnection();
                 PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(s, conn)) {
-                return result;
-            } else {
-                delete.setInt(1, s.getId());
-                result = delete.executeUpdate();
-            }
+                delete.setString(1, nom);
+                return delete.executeUpdate();
+            
         } catch (SQLException e) {
             System.out.println("Error in deleting data: " + e.getMessage());
         }
-        return result;
+        return 0;
+
+    }
+    @Override
+    public int delete(Section s) throws SQLException {
+        String sqlQuery = "DELETE from section WHERE id = ? ";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
+                delete.setInt(1, s.getId());
+                return delete.executeUpdate();
+            
+        } catch (SQLException e) {
+            System.out.println("Error in deleting data: " + e.getMessage());
+        }
+        return 0;
     }
 
     @Override
     public int delete(int id) throws SQLException {
         String sqlQuery = "DELETE from Section WHERE id = ? ";
-        int result = 0;
         try (Connection conn = Database.getConnection();
                 PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                return result;
-            } else {
-                delete.setInt(1, id);
-                result = delete.executeUpdate();
-            }
+                    int affectedRows = delete.executeUpdate();
+                    if(affectedRows > 0){
+                        System.out.println(" Row(s) deleted successfully : " + affectedRows );
+                    }
+            
         } catch (SQLException e) {
             System.out.println("Error in deleting this data: " + e.getMessage());
         }
-        return result;
+        return 0;
     }
 
     @Override
-    public boolean isExists(int id, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Section WHERE id = ? ";
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this ID!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(Section s, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Section WHERE id = ? ";
-        PreparedStatement ps = conn.prepareStatement(sqlQuery);
-        ps.setInt(1, s.getId());
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        }
-        System.out.println("No record found for this data!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(int id) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Section WHERE id = ? ";
-
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this ID!");
-        return false;
-    }
-
-            @Override
     public int getID(String section) throws SQLException {
 
         int id = 0;
-        String sqlQuery = "SELECT id FROM Status WHERE section = ? ";
+        String sqlQuery = "SELECT id FROM Status WHERE status = ? ";
         try (Connection conn = Database.getConnection();
                 PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
-                    idPs.setString(1, section);
+            idPs.setString(1, section);
             ResultSet rs = idPs.executeQuery();
             if (rs.next()) {
                 id = rs.getInt("id");
             }
         }
         return id;
+    }
+
+    @Override
+    public void createSectionTB() throws SQLException {
+        try (Connection conn = Database.getConnection()) {
+            String sqlQuery = "CREATE TABLE IF NOT EXISTS Section ("
+                    + "id SERIAL PRIMARY KEY,"
+                    + "nom VARCHAR(30)"
+                    + ")";
+            conn.createStatement().execute(sqlQuery);
+        } catch (SQLException e) {
+            System.out.println("SQL Error: " + e.getMessage());
+        }
     }
 }

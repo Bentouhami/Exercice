@@ -11,6 +11,10 @@ public class Section {
         this.id = id;
         this.nom = nom;
     }
+    public Section(String nom) {
+        this.nom = nom;
+    }
+    
     public int getId() {
         return id;
     }

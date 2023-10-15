@@ -2,9 +2,16 @@ package com.mvntest.DAL.Personne;
 
 public class Personne {
     
-    private int id = 0;
+    private int id;
     private int id_status;
     private String nom, prenom;
+
+
+    public Personne(int id_status, String nom, String prenom) {
+        this.id_status = id_status;
+        this.nom = nom;
+        this.prenom = prenom;
+    }
 
 
     public Personne() {

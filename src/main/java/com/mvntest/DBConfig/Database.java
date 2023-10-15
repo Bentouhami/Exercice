@@ -17,10 +17,9 @@ public Database(){
 
 public static Connection getConnection() throws SQLException{
         Connection connection = null;
-        if(connection == null){
+        if(connection == null || connection.isClosed()){
             try {
                 connection = DriverManager.getConnection(url, user, password);
-                
                 //System.out.println("You're connected to the database!");
                 
             } catch (SQLException e) {

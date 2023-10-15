@@ -2,10 +2,14 @@ package com.mvntest.DAL.Cours;
 
 public class Cours {
 
-    private int id = 0;
+    private int id;
     private int id_section;
     private String nom;
     
+    public Cours(int id_section, String nom) {
+        this.id_section = id_section;
+        this.nom = nom;
+    }
     public Cours(int id, int id_section, String nom) {
         this.id = id;
         this.id_section = id_section;
