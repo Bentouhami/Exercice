@@ -6,251 +6,284 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import com.mvntest.DBConfig.Database;
-
+/**
+ * Cette classe représente un objet d'accès aux données pour les cours.
+ */
 public class CoursDAOEmplt implements CoursDAO {
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private final String SQL_ERROR = "SQL Error: \n";
+    private Connection conn;
+    private PreparedStatement ps;
 
-    public CoursDAOEmplt() throws SQLException {
-        createCoursTB();
+    public void setConn(Connection conn) {
+        this.conn = conn;
     }
 
-    private void createCoursTB() throws SQLException {
-        String sqlQuery = "CREATE TABLE IF NOT EXISTS Cours (id SERIAL PRIMARY KEY," +
-                " id_section INTEGER, nom VARCHAR(30)," +
-                " CONSTRAINT fk_section FOREIGN KEY (id_section) REFERENCES Section(id))";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.execute();
-        }
+    public void setPs(PreparedStatement ps) {
+        this.ps = ps;
     }
 
+    public CoursDAOEmplt(Connection conn) throws SQLException {
+
+        this.conn = conn;
+    }
+
+    /**
+     * Récupère un cours à partir de son id.
+     * 
+     * @param id Type int: l'id du cours à récupérer
+     * @return Type Cours: le cours correspondant, ou null s'il n'existe pas
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public Cours get(int id) throws SQLException {
         String sqlQuery = "SELECT id, id_section, nom FROM Cours WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement get = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                System.out.println("No record exists with this ID");
-                return null;
-            }
-            get.setInt(1, id);
-            // Essayer d'exécuter la requête SQL et obtenir le résultat
-            try (ResultSet rs = get.executeQuery()) {
-                // Si le résultat contient une ligne, créer un nouvel objet Cours avec les
-                // données de cette ligne
-                // Sinon, retourner null
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id);
+            try (ResultSet rs = this.ps.executeQuery()) {
                 return rs.next() ? new Cours(rs.getInt("id"),
                         rs.getInt("id_section"),
                         rs.getString("nom")) : null;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
+        return null;
     }
 
+    /**
+     * Récupère l'ID d'un cours à partir de son id_section et de son nom.
+     * 
+     * @param id_section Type int: l'id de la section du cours
+     * @param nom        Type String: le nom du cours
+     * @return Type int: l'id du cours correspondant, ou 0 s'il n'existe pas
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
-    public int getID(String nom) throws SQLException {
+    public int getID(int id_section, String nom) throws SQLException {
 
-        int id = 0;
-        String sqlQuery = "SELECT id FROM cours WHERE nom = ? ";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
-                    idPs.setString(1, nom);
-            ResultSet rs = idPs.executeQuery();
-            if (rs.next()) {
-                id = rs.getInt(1);
+        String sqlQuery = "SELECT id FROM cours WHERE id_section= ? AND nom = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id_section);
+            this.ps.setString(2, nom);
+            try (ResultSet rs = this.ps.executeQuery()) {
+
+                return rs.next() ? rs.getInt(1) : 0;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        return id;
+        return 0;
     }
 
+    /**
+     * Récupère tous les cours de la base de données.
+     * 
+     * @return Type ArrayList<Cours>: la liste de tous les cours de la base de
+     *         données
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public ArrayList<Cours> getAll() throws SQLException {
         String sqlQuery = "SELECT id, id_section, nom FROM cours";
         ArrayList<Cours> CoursList = new ArrayList<Cours>();
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            try (ResultSet resultSet = ps.executeQuery()) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            try (ResultSet resultSet = this.ps.executeQuery()) {
                 while (resultSet.next()) {
-                    Cours cour = new Cours(resultSet.getInt("id"),
+                    CoursList.add(new Cours(resultSet.getInt("id"),
                             resultSet.getInt("id_section"),
-                            resultSet.getString("nom"));
-                    CoursList.add(cour);
+                            resultSet.getString("nom")));
                 }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
         }
         return CoursList;
     }
 
+    /**
+     * Enregistre un cours dans la base de données. Si le cours n'existe pas, il est
+     * inséré. Sinon, il est mis à jour.
+     * 
+     * @param c Type Cours: le cours à enregistrer
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public int save(Cours c) throws SQLException {
-        // String sqlQuery = "SELECT COUNT(*) FROM Cours WHERE id = ?";
-        int result = 0;
-        /*
-         * try (// get connection
-         * Connection conn = Database.getConnection();
-         * PreparedStatement countStmt = conn.prepareStatement(sqlQuery)) {
-         * countStmt.setInt(1, c.getId());
-         * try (ResultSet resultSet = countStmt.executeQuery()) {
-         * if (resultSet.next()) {
-         * // get the value retunred and update the count value
-         * result = resultSet.getInt(1);
-         * }
-         * }
-         * // Check count value, if count == 0 means no id found than add the object.
-         * if (!isExists(c, conn)) {
-         * result = insert(c);
-         * System.out.println("data inserted succefully");
-         * } else {
-         * // else means id exists already so update its value.
-         * result = update(c);
-         * System.out.println("data updated succefully");
-         * }
-         * }
-         */
-        try (Connection conn = Database.getConnection()) {
-            result = !isExists(c, conn) ? insert(c) : update(c);
-        }
 
-        return result;
+        return c.getId() == 0 ? insert(c) : update(c);
     }
 
-    @Override
-    public int insert(Cours c) throws SQLException {
-        String sqlQuery = "INSERT INTO Cours (id_section, nom)" +
-                " VALUES ( (SELECT id FROM Secion WHERE nom = ? ),  ? )";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement insert = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(c, conn)) {
-                System.out.println("No such data");
-                return result;
-            } else {
-                insert.setInt(1, c.getId_section());
-                insert.setString(2, c.getNom());
-                result = insert.executeUpdate();
-            }
-        } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
-        }
-        return result;
-    }
-
+    /**
+     * Met à jour un cours dans la base de données.
+     * 
+     * @param c Type Cours: le cours à mettre à jour
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public int update(Cours c) throws SQLException {
         String sqlQuery = "UPDATE cours SET id_section = ?, nom = ? WHERE id  = ?";
-        int result = 0;
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
 
-        // Try to establish a connection and prepare the statement
-        try (Connection conn = Database.getConnection();
-                PreparedStatement update = conn.prepareStatement(sqlQuery)) {
-            // If the course does not exist, print a message and return the result (early
-            // stop).
-            if (!isExists(c, conn)) {
-                System.out.println("No such data");
-                return result;
-            } else {
-                // Set the parameters for the sqlQuery query to update table
-                update.setInt(1, c.getId_section());
-                update.setString(2, c.getNom());
-                update.setInt(3, c.getId());
-                // Execute the update query and store the result
-                result = update.executeUpdate();
-            }
+            this.ps.setInt(1, c.getId_section());
+            this.ps.setString(2, c.getNom());
+            this.ps.setInt(3, c.getId());
+
+            int rowsAffected = this.ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        // Return the result
-        return result;
+        return 0;
     }
 
+    /**
+     * Supprime un cours de la base de données.
+     * 
+     * @param c Type Cours: le cours à supprimer
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public int delete(Cours c) throws SQLException {
         String sqlQuery = "DELETE FROM cours WHERE id = ? ";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(c, conn)) {
-                System.out.println("No record found for this ID!");
-                return result;
-            }
-            delete.setInt(1, c.getId());
-            result = delete.executeUpdate();
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, c.getId());
+            int rowsAffected = this.ps.executeUpdate();
+
+            return rowsAffected > 0 ? rowsAffected : 0;
         } catch (SQLException e) {
-            System.out.println("Error in deleting: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        return result;
+
+        return 0;
     }
 
+    /**
+     * Supprime un cours de la base de données.
+     * 
+     * @param id Type int: l'id du cours à supprimer
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
     @Override
     public int delete(int id) throws SQLException {
         String sqlQuery = "DELETE FROM cours WHERE id = ? ";
-        int result = 0;
-        // Get connection and PreparedStatement.
-        try (Connection conn = Database.getConnection();
-                PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            // Check if id exists in DB.
-            if (!isExists(id, conn)) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setInt(1, id);
+            int rowAffected = this.ps.executeUpdate();
 
-                return result;
+            return rowAffected > 0 ? rowAffected : 0;
 
-            } else { // Performing the delete statement
-                delete.setInt(1, id);
-                result = delete.executeUpdate();
-
-                Database.closePreparedStatement(delete);
-                Database.closeConnection(conn);
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public boolean isExists(int id, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Cours WHERE id = ? ";
-
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this ID!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(Cours c, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Cours WHERE id = ? ";
-
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, c.getId());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this data!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(int id) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Cours WHERE id = ? ";
-
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error excuting the Query: " + e.getMessage());
-            }
         } catch (SQLException e) {
-            System.out.println("Database connection error: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        System.out.println("No record found for this data!");
-        return false;
+        return 0;
     }
+
+    /**
+     * Insère un cours dans la base de données.
+     * 
+     * @param c Type Cours: le cours à insérer
+     * @return Type int: le nombre de lignes affectées par l'insertion
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int insert(Cours c) throws SQLException {
+        String sqlQuery = "INSERT INTO cours (id_section , nom)"
+                + "VALUES (?, ?)";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, c.getId_section());
+            this.ps.setString(2, c.getNom());
+            int rowAffected = this.ps.executeUpdate();
+
+            return rowAffected > 0 ? rowAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Insère un cours dans la base de données.
+     * 
+     * @param id_section Type int: l'id de la section du cours
+     * @param coursNom   Type String : le nom du cours
+     * @return Type int: le nombre de lignes affectées par l'insertion
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int insert(String sectionName, String coursNom) throws SQLException {
+        /*
+         * String sqlQuery = "INSERT INTO Cours (id_section, nom)"
+         * + "VALUES("
+         * + "((SELECT id FROM Section WHERE nom = ? )"
+         * + "?)"
+         */;
+
+        String sqlQuery = "INSERT INTO Cours (id_section, nom) VALUES ((SELECT id FROM Section WHERE nom = ?), ?)";
+
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setString(1, sectionName);
+            this.ps.setString(2, coursNom);
+
+            int rowAffected = this.ps.executeUpdate();
+            return rowAffected > 0 ? rowAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Récupère l'ID d'un cours à partir de son nom.
+     * 
+     * @param s String, le nom du cours
+     * @return Type de retour : int, l'ID du cours ou 0 si aucun cours n'a été
+     *         trouvé
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int getID(String s) throws SQLException {
+        String sqlQuery = "SELECT id FROM cours WHERE nom = ?";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setString(1, s);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(SQL_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
 }

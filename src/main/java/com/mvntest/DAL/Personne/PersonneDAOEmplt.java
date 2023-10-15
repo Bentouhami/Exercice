@@ -10,26 +10,23 @@ import com.mvntest.DBConfig.Database;
 
 public class PersonneDAOEmplt implements PersonneDAO {
 
-    public PersonneDAOEmplt() throws SQLException {
-        creatPersonneTB();
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private final String SQL_ERROR = "SQL Error: \n";
+    private Connection conn;
+    private PreparedStatement ps;
+
+    public void setConn(Connection conn) {
+        this.conn = conn;
     }
 
-    private void creatPersonneTB() throws SQLException {
-        String sqlQuery = "CREATE TABLE IF NOT EXISTS Personne ( " +
-                "id SERIAL PRIMARY KEY," +
-                "id_status INTEGER," +
-                "nom VARCHAR(15)," +
-                "prenom VARCHAR(15)," +
-                "FOREIGN KEY (id_status) REFERENCES Status(id)" +
-                ")";
+    public void setPs(PreparedStatement ps) {
+        this.ps = ps;
+    }
 
-        try (Connection conn = Database.getConnection();
-                PreparedStatement st = conn.prepareStatement(sqlQuery)) {
-            st.execute();
-            System.out.println("Table created successfully.");
-        } catch (SQLException e) {
-            System.out.println("Failed to create table: " + e.getMessage());
-        }
+    public PersonneDAOEmplt(Connection conn) throws SQLException {
+
+        this.conn = conn;
     }
 
     /**
@@ -43,27 +40,21 @@ public class PersonneDAOEmplt implements PersonneDAO {
      */
     @Override
     public Personne get(int id) throws SQLException {
-        String sqlQuery = "SELECT id, id_status, nom, prenom FROM Personne WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement getPs = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                System.out.println("No record exists with this ID");
-                return null;
-            }
-            getPs.setInt(1, id);
-            // Essayer d'exécuter la requête SQL et obtenir le résultat
-            try (ResultSet rs = getPs.executeQuery()) {
-                // Si le résultat contient une ligne, créer un nouvel objet Personne avec les
-                // données de cette ligne
+        String sqlQuery = "SELECT id_status, nom, prenom FROM Personne WHERE id = ?";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id);
+            try (ResultSet rs = this.ps.executeQuery()) {
                 return rs.next() ? new Personne(rs.getInt("id"),
                         rs.getInt("id_status"),
                         rs.getString("nom"),
                         rs.getString("prenom")) : null;
             } catch (SQLException e) {
-                System.out.println("Error trying to get connection the DB : " + e.getMessage());
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error trying to get connection the DB : " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
         return null;
     }
@@ -77,11 +68,11 @@ public class PersonneDAOEmplt implements PersonneDAO {
      */
     @Override
     public ArrayList<Personne> getAll() throws SQLException {
-        String sqlQury = "SELECT id, id_status, nom, prenom FROM Personne";
+        String sqlQuery = "SELECT id, id_status, nom, prenom FROM Personne";
         ArrayList<Personne> listOfPersons = new ArrayList<Personne>();
-        try (Connection conn = Database.getConnection();
-                PreparedStatement getAllPs = conn.prepareStatement(sqlQury)) {
-            try (ResultSet rs = getAllPs.executeQuery()) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            try (ResultSet rs = this.ps.executeQuery()) {
                 while (rs.next()) {
                     Personne personne = new Personne(rs.getInt("id"),
                             rs.getInt("id_status"),
@@ -90,10 +81,10 @@ public class PersonneDAOEmplt implements PersonneDAO {
                     listOfPersons.add(personne);
                 }
             } catch (SQLException e) {
-                System.out.println("Error trying to excute the SQL : " + e.getMessage());
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error trying to get connection the DB : " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
 
         return listOfPersons;
@@ -110,45 +101,30 @@ public class PersonneDAOEmplt implements PersonneDAO {
      */
     @Override
     public int save(Personne p) throws SQLException {
-        int result = 0;
-        try (Connection conn = Database.getConnection()) {
-            result = !isExists(p, conn) ? insert(p) : update(p);
-        } catch (SQLException e) {
-            System.out.println("Error saving this data: " + e.getMessage());
-        }
 
-        return result;
+        return p.getId() > 0 ? insert(p) : update(p);
     }
 
-    /**
-     * Insère une nouvelle personne dans la base de données.
-     * 
-     * @param p La personne à insérer.
-     * @return Le nombre de lignes modifiées dans la base de données.
-     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
-     *                      données.
-     */
     @Override
-    public int insert(Personne p) throws SQLException {
+    public int insert(Personne person) throws SQLException {
 
         String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
                 "VALUES (?, ?, ?)";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement insertSp = conn.prepareStatement(sqlQuery)) {
-            if (isExists(p, conn)) {
-                return result;
-            } else {
-                insertSp.setInt(1, p.getId_status());
-                insertSp.setString(2, p.getNom());
-                insertSp.setString(3, p.getPrenom());
-                insertSp.executeUpdate();
-                System.out.println("row inserted.");
-            }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setInt(1, person.getId_status());
+            ps.setString(2, person.getNom());
+            ps.setString(3, person.getPrenom());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
         }
-        return result;
+
     }
 
     /**
@@ -166,27 +142,22 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 "nom = ?," +
                 "prenom = ?" +
                 "WHERE id = ?";
-        int result = 0;
-        ;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement updatePs = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(p, conn)) {
-                return result;
-            } else {
-                updatePs.setInt(1, p.getId_status());
-                updatePs.setString(2, p.getNom());
-                updatePs.setString(3, p.getPrenom());
-                updatePs.setInt(4, p.getId());
-                updatePs.executeUpdate();
-                System.out.println("Updated.");
-            }
-        } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
-        }
 
-        return result;
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setInt(1, p.getId_status());
+            ps.setString(2, p.getNom());
+            ps.setString(3, p.getPrenom());
+            ps.setInt(4, p.getId());
+
+            int rowAffected = ps.executeUpdate();
+
+            return rowAffected > 0 ? rowAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+        return 0;
     }
 
     /**
@@ -200,129 +171,39 @@ public class PersonneDAOEmplt implements PersonneDAO {
     @Override
     public int delete(Personne p) {
 
-        int result = 0;
         String sqlQuery = "DELETE FROM Personne WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setInt(1, p.getId());
 
-            if (!isExists(p, conn)) {
-                return result;
-            } else {
-                deletePs.setInt(1, p.getId());
-                result = deletePs.executeUpdate();
-            }
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
         } catch (SQLException e) {
-            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
         }
-        return result;
+
     }
 
-    /**
-     * Supprime une personne de la base de données en utilisant son ID.
-     * 
-     * @param id L'ID de la personne à supprimer.
-     * @return Le nombre de lignes supprimées.
-     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
-     *                      données.
-     */
     @Override
     public int delete(int id) throws SQLException {
-        int result = 0;
         String sqlQuery = "DELETE FROM Personne WHERE id = ?";
         try (Connection conn = Database.getConnection();
-                PreparedStatement deletePs = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                return result;
+                PreparedStatement ps = conn.prepareStatement(sqlQuery);) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println(rowsAffected + " Personne deleted from Database.");
+                return rowsAffected;
             } else {
-                deletePs.setInt(1, id);
-                result = deletePs.executeUpdate();
+                System.out.println(rowsAffected + " row(s) deleted.");
             }
+
         } catch (SQLException e) {
-            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        return result;
-    }
 
-    /**
-     * Vérifie si une personne est inscrite à un cours en utilisant son ID.
-     * 
-     * @param id   L'ID de la personne à vérifier.
-     * @param conn La connexion à la base de données.
-     * @return true si la personne est inscrite, false sinon.
-     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
-     *                      données.
-     */
-    @Override
-    public boolean isExists(int id, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Personne_Cours WHERE id = ? ";
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
-            }
-        } catch (SQLException e) {
-            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Vérifie si une personne existe dans la base de données en utilisant son ID.
-     * 
-     * @param p    La personne à vérifier.
-     * @param conn La connexion à la base de données.
-     * @return true si la personne existe, false sinon.
-     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
-     *                      données.
-     */
-    @Override
-    public boolean isExists(Personne p, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Personne WHERE id = ? ";
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, p.getId());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
-            }
-        } catch (SQLException e) {
-            System.out.println("Error while trying to execute the PreparedStatement: " + e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Cette méthode vérifie si une personne existe dans la base de données en
-     * utilisant son ID.
-     * 
-     * @param id L'ID de la personne à vérifier.
-     * @return true si la personne existe, false sinon.
-     * @throws SQLException Si une erreur se produit lors de l'accès à la base de
-     *                      données.
-     */
-    @Override
-    public boolean isExists(int id) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Personne WHERE id = ? ";
-
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error while trying to get data from the DB: " + e.getMessage());
-            }
-        }
-        System.out.println("Aucun enregistrement trouvé pour ces données!");
-        return false;
+        return 0;
     }
 
     /**
@@ -336,18 +217,47 @@ public class PersonneDAOEmplt implements PersonneDAO {
      *                      données.
      */
     @Override
-    public int getID(String nom) throws SQLException {
-
+    public int getID(String nom, String prenom) throws SQLException {
         int id = 0;
-        String sqlQuery = "SELECT id FROM Personne WHERE nom = ? ";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
-            ResultSet rs = idPs.executeQuery();
-            if (rs.next()) {
-                id = rs.getInt(1);
+        String sqlQuery = "SELECT id FROM Personne WHERE nom = ? AND prenom = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setString(1, nom);
+            this.ps.setString(2, prenom);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    id = rs.getInt(1);
+                }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
         }
         return id;
+
+    }
+
+    @Override
+    public int insert(String status, String nom, String prenom) throws SQLException {
+       String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
+                "VALUES ((SELECT id FROM status WHERE status = ?), ?, ?)";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setString(1, status);
+            ps.setString(2, nom);
+            ps.setString(3, prenom);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+        }
     }
 
 }

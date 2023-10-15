@@ -6,16 +6,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import com.mvntest.DBConfig.Database;
-
 public class StatusDAOEmplt implements StatusDAO {
 
-    public StatusDAOEmplt() throws SQLException {
-        String sqlQuery = "CREATE TABLE IF NOT EXISTS Status ( id SERIAL PRIMARY KEY, status VARCHAR(30))";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.execute();
-        }
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private final String SQL_ERROR = "SQL Error: \n";
+    Connection conn;
+    PreparedStatement ps;
+
+    public StatusDAOEmplt(Connection conn) throws SQLException {
+
+        this.conn = conn;
 
     }
 
@@ -23,22 +24,21 @@ public class StatusDAOEmplt implements StatusDAO {
     public Status get(int id) throws SQLException {
         String sqlQuery = "SELECT id, status from status where id = ?";
         // using try-ressorces
-        try (Connection conn = Database.getConnection();
-                PreparedStatement get = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                System.out.println("status not found");
-                return null;
-            } else {
-                get.setInt(1, id);
-                try (ResultSet resultSet = get.executeQuery()) {
-                    // i used 'if' in this place because i'm expecting only one result
-                    if (resultSet.next()) {
-                        int statusId = resultSet.getInt("id");
-                        String status = resultSet.getString("status");
-                        return new Status(statusId, status);
-                    }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setInt(1, id);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                // i used 'if' in this place because i'm expecting only one result
+                if (resultSet.next()) {
+                    int statusId = resultSet.getInt("id");
+                    String status = resultSet.getString("status");
+                    return new Status(statusId, status);
                 }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
         }
         return null;
 
@@ -51,19 +51,18 @@ public class StatusDAOEmplt implements StatusDAO {
         ArrayList<Status> statusList = new ArrayList<Status>();
 
         // try-ressorces
-        try (Connection connection = Database.getConnection();
-                PreparedStatement getAll = connection.prepareStatement(sqlQuery)) {
-            try (ResultSet resultSet = getAll.executeQuery()) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            try (ResultSet resultSet = ps.executeQuery()) {
                 while (resultSet.next()) {
-                    Status statu = new Status(resultSet.getInt("id"),
-                            resultSet.getString("status"));
-                    statusList.add(statu);
+                    statusList.add( new Status(resultSet.getInt("id"),
+                            resultSet.getString("status")));
                 }
             } catch (SQLException e) {
-                System.out.println(e.getMessage());
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println(SQL_ERROR + e.getMessage());
         }
         return statusList;
     }
@@ -71,52 +70,41 @@ public class StatusDAOEmplt implements StatusDAO {
     @Override
     public int save(Status s) throws SQLException {
 
-        int result = 0;
-        try (Connection conn = Database.getConnection()) {
-            result = !isExists(s, conn) ? insert(s) : update(s);
-        }
-        return result;
+        return s.getId() == 0 ? insert(s) : update(s);
     }
 
     @Override
     public int insert(Status s) throws SQLException {
 
         String sqlQuery = "INSERT INTO status (status) VALUES (?)";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement insert = conn.prepareStatement(sqlQuery)) {
-            if (isExists(s, conn)) {
-                return result;
-            } else {
-                insert.setString(1, s.getStatus());
-                insert.execute();
-                System.out.println(" row inserted.");
-            }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setString(1, s.getStatus());
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
         }
-        return result;
     }
 
     @Override
     public int update(Status s) throws SQLException {
 
         String sqlQuery = "UPDATE Status SET status = ? WHERE id=? ";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement updateStatement = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(s, conn)) {
-                return result;
-            } else {
-                updateStatement.setString(1, s.getStatus());
-                updateStatement.setInt(2, s.getId());
-                result = updateStatement.executeUpdate();
-                System.out.println("Updated.");
-            }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setString(1, s.getStatus());
+            this.ps.setInt(2, s.getId());
+
+            int rowsAffected = this.ps.executeUpdate();
+
+            return rowsAffected > 0 ? rowsAffected : 0;
+
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println(SQL_ERROR + e.getMessage());
+            return 0;
         }
-        return result;
 
     }
 
@@ -124,101 +112,79 @@ public class StatusDAOEmplt implements StatusDAO {
     public int delete(Status s) throws SQLException {
 
         String sqlQuery = "DELETE from status WHERE id = ? ";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(s, conn)) {
-                return result;
-            } else {
-                delete.setInt(1, s.getId());
-                result = delete.executeUpdate();
-            }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setInt(1, s.getId());
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println(SQL_ERROR + e.getMessage());
+            return 0;
         }
-        return result;
+    }
+
+    @Override
+    public int delete(String status) {
+        String sqlQuery = "DELETE from status WHERE status = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setString(1, status);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
+        }
+        return 0;
     }
 
     @Override
     public int delete(int id) throws SQLException {
-
         String sqlQuery = "DELETE FROM Status WHERE id = ?";
-        int result = 0;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement delete = conn.prepareStatement(sqlQuery)) {
-            if (!isExists(id, conn)) {
-                return result;
-            } else {
-                delete.setInt(1, id);
-                result = delete.executeUpdate();
-            }
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setInt(1, id);
+            int rowAffected = ps.executeUpdate();
+            return rowAffected > 0 ? rowAffected : 0;
         } catch (SQLException e) {
-            System.out.println("Error while trying to connect to the DB: " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-
-        return result;
-    }
-
-    @Override
-    public boolean isExists(int id, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Status WHERE id = ? ";
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this ID!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(Status s, Connection conn) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM status WHERE id = ? ";
-        PreparedStatement ps = conn.prepareStatement(sqlQuery);
-        ps.setInt(1, s.getId());
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        }
-        System.out.println("No record found for this data!");
-        return false;
-    }
-
-    @Override
-    public boolean isExists(int id) throws SQLException {
-        String sqlQuery = "SELECT COUNT(*) FROM Status WHERE id = ? ";
-
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        System.out.println("No record found for this ID!");
-        return false;
+        return 0;
     }
 
     @Override
     public int getID(String status) throws SQLException {
-
-        int id = 0;
         String sqlQuery = "SELECT id FROM Status WHERE status = ? ";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
-            idPs.setString(1, status);
-            ResultSet rs = idPs.executeQuery();
-            if (rs.next()) {
-                id = rs.getInt("id");
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setString(1, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                } else {
+                    System.out.println("No ID Found for given status :" + status);
+                }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        return id;
+        return 0;
+    }
+
+    @Override
+    public int insert(String status) throws SQLException {
+        String sqlQuery = "INSERT INTO status (status) VALUES (?)";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setString(1, status);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+        }
     }
 
 }
