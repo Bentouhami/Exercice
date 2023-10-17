@@ -1,0 +1,17 @@
+com\mvntest\DAL\Cours_Personne\Cours_Personne.class
+com\mvntest\DAL\Section\Section.class
+com\mvntest\DBConfig\Database.class
+com\mvntest\DAL\Cours\CoursDAO.class
+com\mvntest\DAL\Status\StatusDAO.class
+com\mvntest\DAL\DAO\DAO.class
+com\mvntest\DAL\Cours\Cours.class
+com\mvntest\DAL\Cours_Personne\Cours_PersonneDAO.class
+com\mvntest\DAL\Section\SectionDAO.class
+com\mvntest\DAL\Status\StatusDAOEmplt.class
+com\mvntest\DAL\Personne\PersonneDAO.class
+com\mvntest\DAL\Cours_Personne\Cours_PersonneDAOEmplt.class
+com\mvntest\DAL\Personne\Personne.class
+com\mvntest\DAL\Status\Status.class
+com\mvntest\DAL\Cours\CoursDAOEmplt.class
+com\mvntest\DAL\Personne\PersonneDAOEmplt.class
+com\mvntest\DAL\Section\SectionDAOEmplt.class

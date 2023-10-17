@@ -5,12 +5,19 @@ public class Cours {
     private int id;
     private int id_section;
     private String nom;
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     public Cours(int id_section, String nom) {
         this.id_section = id_section;
         this.nom = nom;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     public Cours(int id, int id_section, String nom) {
         this.id = id;
         this.id_section = id_section;

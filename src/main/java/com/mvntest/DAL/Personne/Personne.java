@@ -1,7 +1,11 @@
 package com.mvntest.DAL.Personne;
 
 public class Personne {
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     private int id;
     private int id_status;
     private String nom, prenom;
@@ -11,6 +15,13 @@ public class Personne {
         this.nom = nom;
         this.prenom = prenom;
     }
+
+    public Personne(int id_status, String nom, String prenom) {
+        this.id_status = id_status;
+        this.nom = nom;
+        this.prenom = prenom;
+    }
+
 
     public Personne() {
     }

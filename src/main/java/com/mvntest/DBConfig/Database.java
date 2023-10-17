@@ -22,6 +22,7 @@ public class Database {
 
     private Database() {
 
+<<<<<<< HEAD
     }
 
     public static Connection getConnection() throws SQLException {
@@ -29,6 +30,15 @@ public class Database {
             try {
                 connexion = DriverManager.getConnection(url, user, password);
 
+=======
+public static Connection getConnection() throws SQLException{
+        Connection connection = null;
+        if(connection == null || connection.isClosed()){
+            try {
+                connection = DriverManager.getConnection(url, user, password);
+                //System.out.println("You're connected to the database!");
+                
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
             } catch (SQLException e) {
                 System.out.println(e.getMessage());
             }

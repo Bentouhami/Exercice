@@ -12,11 +12,18 @@ public class Section {
         this.id = id;
         this.nom = nom;
     }
+<<<<<<< HEAD
 
     public Section(String nom) {
         this.nom = nom;
     }
 
+=======
+    public Section(String nom) {
+        this.nom = nom;
+    }
+    
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     public int getId() {
         return id;
     }

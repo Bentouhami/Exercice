@@ -3,11 +3,18 @@ package com.mvntest.DAL.Status;
 public class Status {
     private int id;
     private String status;
+<<<<<<< HEAD
 
     public Status(String status) {
         this.status = status;
     }
 
+=======
+    
+    public Status(String status) {
+        this.status = status;
+    }
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     public Status() {
     }
 
