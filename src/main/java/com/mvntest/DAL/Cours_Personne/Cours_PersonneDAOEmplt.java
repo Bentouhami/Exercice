@@ -4,6 +4,25 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+<<<<<<< HEAD
+import java.util.ArrayList;
+
+public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
+
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private Connection conn;
+    private PreparedStatement ps;
+
+    public void setConn(Connection conn) {
+        this.conn = conn;
+    }
+
+    public void setPs(PreparedStatement ps) {
+        this.ps = ps;
+    }
+
+=======
 import java.sql.Statement;
 import java.util.ArrayList;
 
@@ -11,13 +30,19 @@ import com.mvntest.DBConfig.Database;
 
 public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
 
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     /**
      * Constructeur de la classe Cours_PersonneDAOEmplt.
      * 
      * @throws SQLException si une erreur SQL survient
      */
+<<<<<<< HEAD
+    public Cours_PersonneDAOEmplt(Connection conn) throws SQLException {
+        this.conn = conn;
+=======
     public Cours_PersonneDAOEmplt() throws SQLException {
         createCoursPersonneTB();
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     }
 
     /**
@@ -30,6 +55,20 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
      */
     @Override
     public Cours_Personne get(int annee) throws SQLException {
+<<<<<<< HEAD
+        String sqlQuery = "SELECT id_personne, id_cours, annee FROM cours_personne WHERE  annee = ?";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, annee);
+            try (ResultSet rs = this.ps.executeQuery()) {
+                return rs.next() ? new Cours_Personne(rs.getInt("id_personne"),
+                        rs.getInt("id_cours"),
+                        rs.getInt("annee")) : null;
+            }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
         String sqlQuery = "select id_personne, id_cours, annee FROM cours_personne WHERE  annee = ?";
         try {
             Connection conn = Database.getConnection();
@@ -44,6 +83,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return null;
     }
@@ -59,6 +99,17 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
     public int delete(int annee) throws SQLException {
         String sqlQuery = "DELETE FROM cours_personne WHERE annee = ?";
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, annee);
+            int rowAffected = this.ps.executeUpdate();
+            return rowAffected > 0 ? rowAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+=======
             Connection conn = Database.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
                 ps.setInt(1, annee);
@@ -72,6 +123,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             System.out.println("SQL Error: " + e.getMessage());
         }
 
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         return 0;
     }
 
@@ -88,6 +140,22 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
         String sqlQuery = "SELECT id_personne, id_cours , annee FROM cours_personne";
         ArrayList<Cours_Personne> coursPersonneListe = new ArrayList<Cours_Personne>();
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            try (ResultSet rs = this.ps.executeQuery()) {
+
+                while (rs.next()) {
+                    coursPersonneListe.add(new Cours_Personne(rs.getInt("id_personne"),
+                            rs.getInt("id_cours"),
+                            rs.getInt("annee")));
+                }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+        } catch (Exception e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             Connection conn = Database.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sqlQuery);
                     ResultSet rs = ps.executeQuery()) {
@@ -103,6 +171,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             }
         } catch (Exception e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return coursPersonneListe;
     }
@@ -117,9 +186,12 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
     @Override
     public int save(Cours_Personne cours_Personne) throws SQLException {
 
+<<<<<<< HEAD
+=======
         // If the year of the course is 0, insert the course_personne object into the
         // database.
         // Otherwise, update the course_personne object in the database.
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         return cours_Personne.getAnnee() == 0 ? insert(cours_Personne) : update(cours_Personne);
     }
 
@@ -144,6 +216,20 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
                 + ")";
 
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setString(1, nom);
+            this.ps.setString(2, prenom);
+            this.ps.setString(3, coursNom);
+            this.ps.setInt(4, annee);
+
+            int affectedRows = this.ps.executeUpdate();
+            return affectedRows > 0 ? affectedRows : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             Connection connection = Database.getConnection();
 
             try (PreparedStatement statement = connection.prepareStatement(sqlQuery)) {
@@ -165,6 +251,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return 0;
     }
@@ -182,6 +269,18 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
                 + " VALUES( ?,?,? )";
 
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setInt(1, c_p.getId_personne());
+            this.ps.setInt(2, c_p.getId_cours());
+            this.ps.setInt(3, c_p.getAnnee());
+
+            int affectedRows = this.ps.executeUpdate();
+            return affectedRows > 0 ? affectedRows : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             Connection connection = Database.getConnection();
 
             try (PreparedStatement statement = connection.prepareStatement(sqlQuery)) {
@@ -201,6 +300,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return 0;
     }
@@ -215,11 +315,26 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
      * @throws SQLException if an SQL error occurs
      */
     @Override
+<<<<<<< HEAD
+    public int insert(int id_personne, int id_cours, int annee) throws SQLException {
+=======
     public int insert(int id_section, int id_cours, int annee) throws SQLException {
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         String sqlQuery = "INSERT INTO cours_personne( id_personne, id_cours, annee )"
                 + " VALUES( ?,?,? )";
 
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setInt(1, id_personne);
+            this.ps.setInt(2, id_cours);
+            this.ps.setInt(3, annee);
+
+            int affectedRows = this.ps.executeUpdate();
+            return affectedRows > 0 ? affectedRows : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             Connection connection = Database.getConnection();
 
             try (PreparedStatement statement = connection.prepareStatement(sqlQuery)) {
@@ -239,6 +354,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return 0;
     }
@@ -268,6 +384,15 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
     }
 
     /**
+<<<<<<< HEAD
+     * Récupère un objet Cours_Personne dans la base de données.
+     * 
+     * @param id_personne Type int: l'identifiant de la personne
+     * @param id_cours    Type int: l'identifiant du cours
+     * @param annee       Type int: l'année
+     * @return Type Cours_Personne: l'objet Cours_Personne correspondant aux
+     *         paramètres donnés
+=======
      * Crée la table Cours_Personne dans la base de données.
      * 
      * @throws SQLException si une erreur SQL survient
@@ -296,11 +421,30 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
      * @param id_cours Type int: l'identifiant du cours
      * @param annee Type int: l'année
      * @return Type Cours_Personne: l'objet Cours_Personne correspondant aux paramètres donnés
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
      * @throws SQLException si une erreur SQL survient
      */
     @Override
     public Cours_Personne get(int id_personne, int id_cours, int annee) throws SQLException {
         String sqlQuery = "SELECT id_personne, id_cours, annee FROM cours_personne WHERE id_personne = ? AND id_cours = ? AND annee =  ?";
+<<<<<<< HEAD
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id_personne);
+            this.ps.setInt(2, id_cours);
+            this.ps.setInt(3, annee);
+
+            try (ResultSet rs = this.ps.executeQuery()) {
+                return rs.next() ? new Cours_Personne(rs.getInt("id"),
+                        rs.getInt("id_personne"),
+                        rs.getInt("annee")) : null;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
             ps.setInt(1, id_personne);
@@ -316,6 +460,7 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
 
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return null;
     }
@@ -335,6 +480,21 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
         String sqlQuery = "UPDATE cours_personne SET id_personne = ?, id_cours = ? WHERE annee = ?";
 
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id_personne);
+            this.ps.setInt(2, id_cours);
+            this.ps.setInt(3, annee);
+
+            int rowAffected = this.ps.executeUpdate();
+            return rowAffected > 0 ? rowAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+        }
+=======
             Connection conn = Database.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
                 ps.setInt(1, id_personne);
@@ -351,5 +511,6 @@ public class Cours_PersonneDAOEmplt implements Cours_PersonneDAO {
             System.out.println("SQL Error: " + e.getMessage());
         }
         return 0;
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     }
 }

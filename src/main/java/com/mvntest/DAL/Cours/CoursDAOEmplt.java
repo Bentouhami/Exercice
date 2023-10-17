@@ -6,13 +6,36 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+<<<<<<< HEAD
+=======
 import com.mvntest.DBConfig.Database;
 
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
 /**
  * Cette classe représente un objet d'accès aux données pour les cours.
  */
 public class CoursDAOEmplt implements CoursDAO {
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private final String SQL_ERROR = "SQL Error: \n";
+    private Connection conn;
+    private PreparedStatement ps;
 
+<<<<<<< HEAD
+    public void setConn(Connection conn) {
+        this.conn = conn;
+    }
+
+    public void setPs(PreparedStatement ps) {
+        this.ps = ps;
+    }
+
+    public CoursDAOEmplt(Connection conn) throws SQLException {
+
+        this.conn = conn;
+    }
+
+=======
     public CoursDAOEmplt() throws SQLException {
         createCoursTable();
     }
@@ -37,6 +60,7 @@ public class CoursDAOEmplt implements CoursDAO {
     }
 
     
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     /**
      * Récupère un cours à partir de son id.
      * 
@@ -48,6 +72,20 @@ public class CoursDAOEmplt implements CoursDAO {
     public Cours get(int id) throws SQLException {
         String sqlQuery = "SELECT id, id_section, nom FROM Cours WHERE id = ?";
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id);
+            try (ResultSet rs = this.ps.executeQuery()) {
+                return rs.next() ? new Cours(rs.getInt("id"),
+                        rs.getInt("id_section"),
+                        rs.getString("nom")) : null;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             Connection conn = Database.getConnection();
             try (PreparedStatement get = conn.prepareStatement(sqlQuery)) {
                 
@@ -63,6 +101,7 @@ public class CoursDAOEmplt implements CoursDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: = " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return null;
     }
@@ -71,13 +110,30 @@ public class CoursDAOEmplt implements CoursDAO {
      * Récupère l'ID d'un cours à partir de son id_section et de son nom.
      * 
      * @param id_section Type int: l'id de la section du cours
+<<<<<<< HEAD
+     * @param nom        Type String: le nom du cours
+=======
      * @param nom Type String: le nom du cours
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
      * @return Type int: l'id du cours correspondant, ou 0 s'il n'existe pas
      * @throws SQLException si une erreur SQL survient
      */
     @Override
     public int getID(int id_section, String nom) throws SQLException {
 
+<<<<<<< HEAD
+        String sqlQuery = "SELECT id FROM cours WHERE id_section= ? AND nom = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id_section);
+            this.ps.setString(2, nom);
+            try (ResultSet rs = this.ps.executeQuery()) {
+
+                return rs.next() ? rs.getInt(1) : 0;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+=======
         int id = 0;
         String sqlQuery = "SELECT id FROM cours WHERE id_section= ? AND nom = ? ";
         try (Connection conn = Database.getConnection();
@@ -88,42 +144,65 @@ public class CoursDAOEmplt implements CoursDAO {
                 if (rs.next()) {
                     id = rs.getInt(1);
                 }
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
             }
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
-        return id;
+        return 0;
     }
 
+<<<<<<< HEAD
+    /**
+     * Récupère tous les cours de la base de données.
+     * 
+     * @return Type ArrayList<Cours>: la liste de tous les cours de la base de
+     *         données
+=======
     
     /**
      * Récupère tous les cours de la base de données.
      * 
      * @return Type ArrayList<Cours>: la liste de tous les cours de la base de données
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
      * @throws SQLException si une erreur SQL survient
      */
     @Override
     public ArrayList<Cours> getAll() throws SQLException {
         String sqlQuery = "SELECT id, id_section, nom FROM cours";
         ArrayList<Cours> CoursList = new ArrayList<Cours>();
-        try (Connection conn = Database.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            try (ResultSet resultSet = ps.executeQuery()) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            try (ResultSet resultSet = this.ps.executeQuery()) {
                 while (resultSet.next()) {
-                    Cours cour = new Cours(resultSet.getInt("id"),
+                    CoursList.add(new Cours(resultSet.getInt("id"),
                             resultSet.getInt("id_section"),
-                            resultSet.getString("nom"));
-                    CoursList.add(cour);
+                            resultSet.getString("nom")));
                 }
             } catch (SQLException e) {
+<<<<<<< HEAD
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
+=======
                 System.out.println("SQL Error ResultSet : " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return CoursList;
     }
 
     /**
+<<<<<<< HEAD
+     * Enregistre un cours dans la base de données. Si le cours n'existe pas, il est
+     * inséré. Sinon, il est mis à jour.
+=======
      * Enregistre un cours dans la base de données. Si le cours n'existe pas, il est inséré. Sinon, il est mis à jour.
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
      * 
      * @param c Type Cours: le cours à enregistrer
      * @return Type int: le nombre de lignes affectées par l'opération
@@ -133,6 +212,78 @@ public class CoursDAOEmplt implements CoursDAO {
     public int save(Cours c) throws SQLException {
 
         return c.getId() == 0 ? insert(c) : update(c);
+<<<<<<< HEAD
+    }
+
+    /**
+     * Met à jour un cours dans la base de données.
+     * 
+     * @param c Type Cours: le cours à mettre à jour
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int update(Cours c) throws SQLException {
+        String sqlQuery = "UPDATE cours SET id_section = ?, nom = ? WHERE id  = ?";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, c.getId_section());
+            this.ps.setString(2, c.getNom());
+            this.ps.setInt(3, c.getId());
+
+            int rowsAffected = this.ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Supprime un cours de la base de données.
+     * 
+     * @param c Type Cours: le cours à supprimer
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int delete(Cours c) throws SQLException {
+        String sqlQuery = "DELETE FROM cours WHERE id = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, c.getId());
+            int rowsAffected = this.ps.executeUpdate();
+
+            return rowsAffected > 0 ? rowsAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+
+        return 0;
+    }
+
+    /**
+     * Supprime un cours de la base de données.
+     * 
+     * @param id Type int: l'id du cours à supprimer
+     * @return Type int: le nombre de lignes affectées par l'opération
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int delete(int id) throws SQLException {
+        String sqlQuery = "DELETE FROM cours WHERE id = ? ";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setInt(1, id);
+            int rowAffected = this.ps.executeUpdate();
+
+            return rowAffected > 0 ? rowAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
     }
     /**
      * Met à jour un cours dans la base de données.
@@ -283,11 +434,73 @@ public class CoursDAOEmplt implements CoursDAO {
             }
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return 0;
     }
 
     /**
+<<<<<<< HEAD
+     * Insère un cours dans la base de données.
+     * 
+     * @param c Type Cours: le cours à insérer
+     * @return Type int: le nombre de lignes affectées par l'insertion
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int insert(Cours c) throws SQLException {
+        String sqlQuery = "INSERT INTO cours (id_section , nom)"
+                + "VALUES (?, ?)";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, c.getId_section());
+            this.ps.setString(2, c.getNom());
+            int rowAffected = this.ps.executeUpdate();
+
+            return rowAffected > 0 ? rowAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Insère un cours dans la base de données.
+     * 
+     * @param id_section Type int: l'id de la section du cours
+     * @param coursNom   Type String : le nom du cours
+     * @return Type int: le nombre de lignes affectées par l'insertion
+     * @throws SQLException si une erreur SQL survient
+     */
+    @Override
+    public int insert(String sectionName, String coursNom) throws SQLException {
+        /*
+         * String sqlQuery = "INSERT INTO Cours (id_section, nom)"
+         * + "VALUES("
+         * + "((SELECT id FROM Section WHERE nom = ? )"
+         * + "?)"
+         */;
+
+        String sqlQuery = "INSERT INTO Cours (id_section, nom) VALUES ((SELECT id FROM Section WHERE nom = ?), ?)";
+
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            this.ps.setString(1, sectionName);
+            this.ps.setString(2, coursNom);
+
+            int rowAffected = this.ps.executeUpdate();
+            return rowAffected > 0 ? rowAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+=======
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
      * Récupère l'ID d'un cours à partir de son nom.
      * 
      * @param s String, le nom du cours
@@ -299,6 +512,20 @@ public class CoursDAOEmplt implements CoursDAO {
     public int getID(String s) throws SQLException {
         String sqlQuery = "SELECT id FROM cours WHERE nom = ?";
         try {
+<<<<<<< HEAD
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setString(1, s);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(SQL_ERROR + e.getMessage());
+=======
             Connection conn = Database.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
 
@@ -322,6 +549,7 @@ public class CoursDAOEmplt implements CoursDAO {
         } catch (SQLException e) {
 
             System.out.println("Erreur SQL : " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
         return 0;
     }

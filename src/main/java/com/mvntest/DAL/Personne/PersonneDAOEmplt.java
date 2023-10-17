@@ -10,8 +10,28 @@ import com.mvntest.DBConfig.Database;
 
 public class PersonneDAOEmplt implements PersonneDAO {
 
+<<<<<<< HEAD
+    private final String RESULTSET_ERROR = "SQL ResultSet Error: \n";
+    private final String PREPAREDSTATEMENT_ERROR = "SQL PreparedStatement Error: \n";
+    private final String SQL_ERROR = "SQL Error: \n";
+    private Connection conn;
+    private PreparedStatement ps;
+
+    public void setConn(Connection conn) {
+        this.conn = conn;
+    }
+
+    public void setPs(PreparedStatement ps) {
+        this.ps = ps;
+    }
+
+    public PersonneDAOEmplt(Connection conn) throws SQLException {
+
+        this.conn = conn;
+=======
     public PersonneDAOEmplt() throws SQLException {
         createPersonneTB();
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     }
 
     /**
@@ -26,6 +46,13 @@ public class PersonneDAOEmplt implements PersonneDAO {
     @Override
     public Personne get(int id) throws SQLException {
         String sqlQuery = "SELECT id_status, nom, prenom FROM Personne WHERE id = ?";
+<<<<<<< HEAD
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setInt(1, id);
+            try (ResultSet rs = this.ps.executeQuery()) {
+=======
         try (Connection conn = Database.getConnection();
                 PreparedStatement getPs = conn.prepareStatement(sqlQuery)) {
             /*
@@ -39,15 +66,16 @@ public class PersonneDAOEmplt implements PersonneDAO {
             try (ResultSet rs = getPs.executeQuery()) {
                 // Si le résultat contient une ligne, créer un nouvel objet Personne avec les
                 // données de cette ligne
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
                 return rs.next() ? new Personne(rs.getInt("id"),
                         rs.getInt("id_status"),
                         rs.getString("nom"),
                         rs.getString("prenom")) : null;
             } catch (SQLException e) {
-                System.out.println("Error trying to get connection the DB : " + e.getMessage());
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error trying to get connection the DB : " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
         return null;
     }
@@ -61,11 +89,11 @@ public class PersonneDAOEmplt implements PersonneDAO {
      */
     @Override
     public ArrayList<Personne> getAll() throws SQLException {
-        String sqlQury = "SELECT id, id_status, nom, prenom FROM Personne";
+        String sqlQuery = "SELECT id, id_status, nom, prenom FROM Personne";
         ArrayList<Personne> listOfPersons = new ArrayList<Personne>();
-        try (Connection conn = Database.getConnection();
-                PreparedStatement getAllPs = conn.prepareStatement(sqlQury)) {
-            try (ResultSet rs = getAllPs.executeQuery()) {
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            try (ResultSet rs = this.ps.executeQuery()) {
                 while (rs.next()) {
                     Personne personne = new Personne(rs.getInt("id"),
                             rs.getInt("id_status"),
@@ -74,10 +102,10 @@ public class PersonneDAOEmplt implements PersonneDAO {
                     listOfPersons.add(personne);
                 }
             } catch (SQLException e) {
-                System.out.println("Error trying to excute the SQL : " + e.getMessage());
+                System.out.println(RESULTSET_ERROR + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error trying to get connection the DB : " + e.getMessage());
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
         }
 
         return listOfPersons;
@@ -94,29 +122,49 @@ public class PersonneDAOEmplt implements PersonneDAO {
      */
     @Override
     public int save(Personne p) throws SQLException {
+<<<<<<< HEAD
+=======
         int result = 0;
         try (Connection conn = Database.getConnection()) {
             // result = !isExists(p, conn) ? insert(p) : update(p);
         } catch (SQLException e) {
             System.out.println("Error saving this data: " + e.getMessage());
         }
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
 
-        return result;
+        return p.getId() > 0 ? insert(p) : update(p);
     }
 
+<<<<<<< HEAD
+=======
     
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     @Override
     public int insert(Personne person) throws SQLException {
 
         String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
                 "VALUES (?, ?, ?)";
+<<<<<<< HEAD
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+=======
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
             ps.setInt(1, person.getId_status());
             ps.setString(2, person.getNom());
             ps.setString(3, person.getPrenom());
 
             int rowsAffected = ps.executeUpdate();
+<<<<<<< HEAD
+            return rowsAffected > 0 ? rowsAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+        }
+=======
             if (rowsAffected > 0) {
                 System.out.println(rowsAffected + " row(s) inserted.");
                 return rowsAffected;
@@ -128,6 +176,7 @@ public class PersonneDAOEmplt implements PersonneDAO {
             System.out.println("SQL Error: " + e.getMessage());
         }
         return 0;
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
 
     }
 
@@ -146,6 +195,24 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 "nom = ?," +
                 "prenom = ?" +
                 "WHERE id = ?";
+<<<<<<< HEAD
+
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setInt(1, p.getId_status());
+            ps.setString(2, p.getNom());
+            ps.setString(3, p.getPrenom());
+            ps.setInt(4, p.getId());
+
+            int rowAffected = ps.executeUpdate();
+
+            return rowAffected > 0 ? rowAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+        }
+        return 0;
+=======
         int result = 0;
         ;
         try (Connection conn = Database.getConnection();
@@ -168,6 +235,7 @@ public class PersonneDAOEmplt implements PersonneDAO {
             System.out.println("SQL Error: " + e.getMessage());
         }
         return result;
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     }
 
     /**
@@ -181,10 +249,23 @@ public class PersonneDAOEmplt implements PersonneDAO {
     @Override
     public int delete(Personne p) {
 
-        int result = 0;
         String sqlQuery = "DELETE FROM Personne WHERE id = ?";
+<<<<<<< HEAD
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+            ps.setInt(1, p.getId());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+        }
+
+=======
 
         return result;
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
     }
 
     @Override
@@ -202,7 +283,11 @@ public class PersonneDAOEmplt implements PersonneDAO {
             }
 
         } catch (SQLException e) {
+<<<<<<< HEAD
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+=======
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
 
         return 0;
@@ -222,6 +307,20 @@ public class PersonneDAOEmplt implements PersonneDAO {
     public int getID(String nom, String prenom) throws SQLException {
         int id = 0;
         String sqlQuery = "SELECT id FROM Personne WHERE nom = ? AND prenom = ? ";
+<<<<<<< HEAD
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            this.ps.setString(1, nom);
+            this.ps.setString(2, prenom);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    id = rs.getInt(1);
+                }
+            } catch (SQLException e) {
+                System.out.println(RESULTSET_ERROR + e.getMessage());
+=======
         try (Connection conn = Database.getConnection();
                 PreparedStatement idPs = conn.prepareStatement(sqlQuery)) {
             idPs.setString(1, nom);
@@ -230,13 +329,34 @@ public class PersonneDAOEmplt implements PersonneDAO {
                 if (rs.next()) {
                     id = rs.getInt(1);
                 }
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
             }
+        } catch (SQLException e) {
+            System.out.println(SQL_ERROR + e.getMessage());
         }
         return id;
 
     }
 
     @Override
+<<<<<<< HEAD
+    public int insert(String status, String nom, String prenom) throws SQLException {
+       String sqlQuery = "INSERT INTO Personne (id_status, nom, prenom)" +
+                "VALUES ((SELECT id FROM status WHERE status = ?), ?, ?)";
+        try {
+            this.ps = this.conn.prepareStatement(sqlQuery);
+
+            ps.setString(1, status);
+            ps.setString(2, nom);
+            ps.setString(3, prenom);
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0 ? rowsAffected : 0;
+
+        } catch (SQLException e) {
+            System.out.println(PREPAREDSTATEMENT_ERROR + e.getMessage());
+            return 0;
+=======
     public void createPersonneTB() throws SQLException {
         try (Connection conn = Database.getConnection()) {
             String sqlQuery = "CREATE TABLE IF NOT EXISTS Personne ("
@@ -250,6 +370,7 @@ public class PersonneDAOEmplt implements PersonneDAO {
             conn.createStatement().execute(sqlQuery);
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
+>>>>>>> 606efc33e42394375883277cca04f6f28bba333f
         }
     }
 
