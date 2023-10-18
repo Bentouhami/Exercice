@@ -57,7 +57,7 @@ public class Main {
                 } else if (dbName.contains(" ")) {
                     System.out.println("Database name cannot contain spaces. Try again.");
                 } else {
-                    break; // Sortir de la boucle si tout est bon
+                    break; 
                 }
             }
 
